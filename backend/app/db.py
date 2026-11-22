@@ -71,6 +71,23 @@ CREATE TABLE IF NOT EXISTS watermarks (
   value INTEGER NOT NULL,
   updated_at TEXT NOT NULL
 );
+-- 跨店转挂回执：口径A（同票改所属店）。票号不变，仅迁所属店；
+-- 一行回执对应一次原子转挂，是审计/重放的留痕，不是占用计数器。
+CREATE TABLE IF NOT EXISTS transfer_receipts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ticket_no TEXT NOT NULL,
+  from_store TEXT NOT NULL,
+  to_store TEXT NOT NULL,
+  status_snapshot TEXT NOT NULL,
+  operator TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_transfer_receipts_ticket
+  ON transfer_receipts(ticket_no, id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_transfer_idempotency
+  ON transfer_receipts(idempotency_key)
+  WHERE idempotency_key <> '';
 """
 
 STATUSES = ("已收", "水洗", "烘干", "熨烫", "待取", "已取", "超期隔离", "丢失隔离")
@@ -81,6 +98,10 @@ FORWARD = {
     "熨烫": ("待取",),
     "待取": (),
 }
+
+# 不在途的票：已取关账、丢失隔离（与 gate.refresh_in_flight 的水位口径一致）。
+# 跨店转挂仅允许在途票；超期隔离仍属在途，可转挂。
+NOT_IN_FLIGHT = ("已取", "丢失隔离")
 
 
 def connect() -> sqlite3.Connection:

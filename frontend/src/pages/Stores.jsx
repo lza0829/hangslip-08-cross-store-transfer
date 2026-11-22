@@ -7,21 +7,25 @@ export default function Stores() {
 
   useEffect(() => {
     api
-      .门店()
+      .门店占用()
       .then(setRows)
       .catch((e) => setMsg(e.message));
   }, []);
 
   return (
     <section className="panel">
-      <h3>门店衣架</h3>
+      <h3>门店衣架 · 在途占用</h3>
+      <p className="hint">占用票数/件数均由挂牌现行行重放，转挂在同一事务内迁移，不做独立加减。</p>
       <p className="msg">{msg}</p>
       <table>
         <thead>
           <tr>
             <th>代号</th>
             <th>名称</th>
+            <th>在途票数</th>
+            <th>在途件数</th>
             <th>衣架轨数</th>
+            <th>剩余轨位</th>
             <th>状态</th>
           </tr>
         </thead>
@@ -30,7 +34,10 @@ export default function Stores() {
             <tr key={r.code}>
               <td>{r.code}</td>
               <td>{r.name}</td>
+              <td>{r.in_flight_tickets}</td>
+              <td>{r.in_flight_pieces}</td>
               <td>{r.rack_count}</td>
+              <td className={r.free_racks < 0 ? "warn-text" : ""}>{r.free_racks}</td>
               <td>{r.active ? "在用" : "停用"}</td>
             </tr>
           ))}

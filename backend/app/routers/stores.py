@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.db import connect
+from app.services.stores import list_store_occupancy
 
 router = APIRouter(tags=["门店"])
 
@@ -21,6 +22,12 @@ def list_stores():
         return [dict(r) for r in conn.execute("SELECT * FROM stores ORDER BY id").fetchall()]
     finally:
         conn.close()
+
+
+@router.get("/门店/占用")
+def store_occupancy_view():
+    # 门店页占用：全部由挂牌现行行重放（票数/件数/剩余轨位）。
+    return list_store_occupancy()
 
 
 @router.post("/门店")

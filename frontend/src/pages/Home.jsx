@@ -44,6 +44,36 @@ export default function Home() {
       <div className="msg">{err}</div>
       {d && (
         <section className="panel">
+          <h3>
+            门店在途分布
+            <span className={`consistency ${d.水位一致 ? "ok" : "bad"}`}>
+              {d.水位一致 ? "水位与重放一致" : "水位漂移！"}
+            </span>
+          </h3>
+          <table>
+            <thead>
+              <tr>
+                <th>门店</th>
+                <th>在途票数</th>
+                <th>在途件数</th>
+                <th>剩余轨位</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.门店在途.map((o) => (
+                <tr key={o.code}>
+                  <td>{o.name}</td>
+                  <td>{o.in_flight_tickets}</td>
+                  <td>{o.in_flight_pieces}</td>
+                  <td className={o.free_racks < 0 ? "warn-text" : ""}>{o.free_racks}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+      {d && (
+        <section className="panel">
           <h3>工序分布</h3>
           <table>
             <thead>
